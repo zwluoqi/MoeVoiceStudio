@@ -32,9 +32,9 @@ VitsSvc::VitsSvc(const rapidjson::Document& _config, const callback& _cb, const 
 		const auto modelPath = _config["ModelPath"].GetString();
 		_path = to_wide_string(modelPath);
 
-		// ½«×Ö·û´®Â·¾¶×ª»»Îªfilesystem::path¶ÔÏó
+		// å°†å­—ç¬¦ä¸²è·¯å¾„è½¬æ¢ä¸ºfilesystem::pathå¯¹è±¡
 		std::filesystem::path pathObj(modelPath);
-		// »ñÈ¡ÎÄ¼şËùÔÚÄ¿Â¼
+		// è·å–æ–‡ä»¶æ‰€åœ¨ç›®å½•
 		std::filesystem::path directory = pathObj.parent_path();
 
 		K_means_folder = to_wide_string( directory.string() ) + L"\\"+L"kmeans.npy";
@@ -177,7 +177,7 @@ VitsSvc::VitsSvc(const rapidjson::Document& _config, const callback& _cb, const 
 	_get_init_params = _mr;
 }
 
-//ÒÑÆúÓÃ£¨¾ÉMoeSSµÄÍÆÀíº¯Êı£©
+//å·²å¼ƒç”¨ï¼ˆæ—§MoeSSçš„æ¨ç†å‡½æ•°ï¼‰
 #ifdef MOESSDFN
 std::vector<int16_t> VitsSvc::InferBatch() const
 {
@@ -440,7 +440,7 @@ std::vector<int16_t> VitsSvc::InferBatch() const
 }
 #endif
 
-//ÍÆÀí
+//æ¨ç†
 std::vector<int16_t> VitsSvc::InferWithF0AndHiddenUnit(std::vector<MoeVSProject::Params>& Inputs) const
 {
 	// Hidden_Unit -> Shape -> [audio, slice]
@@ -1036,32 +1036,32 @@ void VitsSvc::StartRT(Mui::Window::UIWindowBasic* window)
 					auto queue_dataSize = Mui::_m_size(outputBuffer[0].size() * 2);
 					while (queue_dataSize + lastSize >= PCMSIZE)
 					{
-						//Ã¿´Î´Ó¶ÓÁĞÖĞÄÃ×ßÖ¡´óĞ¡µÄÊı¾İ
+						//æ¯æ¬¡ä»é˜Ÿåˆ—ä¸­æ‹¿èµ°å¸§å¤§å°çš„æ•°æ®
 						const auto dataSize = PCMSIZE - lastSize;
 						memcpy(pBuffer.data() + lastSize, queue_data, dataSize);
-						//µ÷ÓÃWriteStream ²¥·Å
+						//è°ƒç”¨WriteStream æ’­æ”¾
 						audio_player->WriteStreamPCM(audio_stream, pBuffer.data(), PCMSIZE);
-						//Ö¸ÕëÆ«ÒÆ
+						//æŒ‡é’ˆåç§»
 						queue_data += dataSize;
 						queue_dataSize -= dataSize;
 						lastSize = 0;
 					}
-					//Èç¹ûÊ£ÓàÊı¾İ²»×ãPCMLength
+					//å¦‚æœå‰©ä½™æ•°æ®ä¸è¶³PCMLength
 					if (queue_dataSize > 0)
 					{
-						//¼ì²é±¾´ÎqueueÄÜ·ñ°Ñ»º³åÇøÌîÂú
+						//æ£€æŸ¥æœ¬æ¬¡queueèƒ½å¦æŠŠç¼“å†²åŒºå¡«æ»¡
 						if (lastSize + queue_dataSize >= PCMSIZE)
 						{
-							//¼ÆËãÊ£Óà¿Õ¼ä
+							//è®¡ç®—å‰©ä½™ç©ºé—´
 							const auto dataSize = PCMSIZE - lastSize;
-							//¸´ÖÆÊı¾İµ½buffer
+							//å¤åˆ¶æ•°æ®åˆ°buffer
 							memcpy(pBuffer.data() + lastSize, queue_data, dataSize);
 							audio_player->WriteStreamPCM(audio_stream, pBuffer.data(), PCMSIZE);
 							queue_data += dataSize;
 							queue_dataSize -= dataSize;
 							lastSize = 0;
 						}
-						//Èç¹ûÊ£Óà¿Õ¼äÈÔÈ»²»×ãPCMLength£¬½«Ê£ÓàÊı¾İ¸´ÖÆµ½bufferÖĞ µÈ´ıÏÂ´ÎÑ­»·
+						//å¦‚æœå‰©ä½™ç©ºé—´ä»ç„¶ä¸è¶³PCMLengthï¼Œå°†å‰©ä½™æ•°æ®å¤åˆ¶åˆ°bufferä¸­ ç­‰å¾…ä¸‹æ¬¡å¾ªç¯
 						if (queue_dataSize > 0)
 						{
 							memcpy(pBuffer.data() + lastSize, queue_data, queue_dataSize);
