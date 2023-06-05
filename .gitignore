@@ -13,3 +13,4 @@ cmake-build-debug
 /MoeVoiceStudioCoreSrc/Models
 /MoeVoiceStudioCoreSrc/OutPuts
 Assets
+*.onnx
