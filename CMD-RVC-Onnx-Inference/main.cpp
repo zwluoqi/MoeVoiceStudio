@@ -6,23 +6,23 @@
 rapidjson::Document parseJSONFile(const std::string& filename) {
     rapidjson::Document document;
 
-    // ´ò¿ªJSONÎÄ¼ş
+    // æ‰“å¼€JSONæ–‡ä»¶
     std::ifstream file(filename);
 
     if (file.is_open()) {
-        // ½«ÎÄ¼şÄÚÈİ¶ÁÈë×Ö·û´®
+        // å°†æ–‡ä»¶å†…å®¹è¯»å…¥å­—ç¬¦ä¸²
         std::string jsonContent((std::istreambuf_iterator<char>(file)),
             std::istreambuf_iterator<char>());
 
-        // ½âÎöJSON×Ö·û´®
+        // è§£æJSONå­—ç¬¦ä¸²
         document.Parse(jsonContent.c_str());
 
-        // ¼ì²é½âÎöÊÇ·ñ³É¹¦
+        // æ£€æŸ¥è§£ææ˜¯å¦æˆåŠŸ
         if (document.HasParseError()) {
             std::cout << "Failed to parse JSON." << std::endl;
         }
 
-        // ¹Ø±ÕÎÄ¼ş
+        // å…³é—­æ–‡ä»¶
         file.close();
     }
     else {
@@ -35,15 +35,15 @@ rapidjson::Document parseJSONFile(const std::string& filename) {
 
 InferClass::BaseModelType* CreateModel() {
     std::string modelPath;
-    std::cout << "ÊäÈëONNXÄ£ĞÍÂ·¾¶£º" << std::endl;
+    std::cout << "è¾“å…¥ONNXæ¨¡å‹è·¯å¾„ï¼š" << std::endl;
     std::cin >> modelPath;
 
     std::string configPath;
-    std::cout << "ÊäÈëÅäÖÃÂ·¾¶£º" << std::endl;
+    std::cout << "è¾“å…¥é…ç½®è·¯å¾„ï¼š" << std::endl;
     std::cin >> configPath;
 
     rapidjson::Document Config = parseJSONFile(configPath);
-    // Ìí¼Ó×Ö·û´®×Ö¶Îµ½Document¶ÔÏó
+    // æ·»åŠ å­—ç¬¦ä¸²å­—æ®µåˆ°Documentå¯¹è±¡
     rapidjson::Document::AllocatorType& allocator = Config.GetAllocator();
     rapidjson::Value key("ModelPath", allocator);
     rapidjson::Value value(modelPath.c_str(), allocator);
@@ -116,7 +116,7 @@ int main() {
             std::wstring input;
             std::wstring outpath;
 
-            std::wcout << "µÈ´ıÊäÈëÒôÆµÂ·¾¶£º" << std::endl;
+            std::wcout << "ç­‰å¾…è¾“å…¥éŸ³é¢‘è·¯å¾„ï¼š" << std::endl;
             std::wcin >> input;
 
             if (input.empty() || input.size() == 0) {
@@ -126,33 +126,33 @@ int main() {
             if (input.compare(exit) == 0 ) {
                 break;
             }
-            std::wcout << "µÈ´ıÊä³öÒôÆµÂ·¾¶£º" << std::endl;
+            std::wcout << "ç­‰å¾…è¾“å‡ºéŸ³é¢‘è·¯å¾„ï¼š" << std::endl;
             std::wcin >> outpath;
 
             if (outpath.empty() || outpath.size() == 0) {
                 continue;
             }
-            // ÔÚÕâÀï¿ÉÒÔ¸ù¾İÊäÈëÖ¸Áî½øĞĞÏàÓ¦µÄ´¦Àí
-            //std::wcout << "ÊäÈëÖ¸ÁîÎª£º" << input << std::endl;
+            // åœ¨è¿™é‡Œå¯ä»¥æ ¹æ®è¾“å…¥æŒ‡ä»¤è¿›è¡Œç›¸åº”çš„å¤„ç†
+            //std::wcout << "è¾“å…¥æŒ‡ä»¤ä¸ºï¼š" << input << std::endl;
 
 
-            // ¼ÇÂ¼¿ªÊ¼Ê±¼ä
+            // è®°å½•å¼€å§‹æ—¶é—´
             auto start = std::chrono::high_resolution_clock::now();
             output = model->Inference(input);
 
 
             const Wav outWav(model->GetSamplingRate(), output.size() * 2, output.data());
             outWav.Writef(outpath);
-            std::wcout << "±£´æÒôÆµÂ·¾¶£º" << outpath << std::endl;
+            std::wcout << "ä¿å­˜éŸ³é¢‘è·¯å¾„ï¼š" << outpath << std::endl;
 
-            // ¼ÇÂ¼½áÊøÊ±¼ä
+            // è®°å½•ç»“æŸæ—¶é—´
             auto end = std::chrono::high_resolution_clock::now();
 
-            // ¼ÆËãÖ´ĞĞÊ±¼ä
+            // è®¡ç®—æ‰§è¡Œæ—¶é—´
             std::chrono::duration<double, std::milli> elapsed = end - start;
 
-            // Êä³öÖ´ĞĞÊ±¼ä
-            std::cout << "´úÂëÖ´ĞĞÊ±¼ä: " << elapsed.count() << " ms" << std::endl;
+            // è¾“å‡ºæ‰§è¡Œæ—¶é—´
+            std::cout << "ä»£ç æ‰§è¡Œæ—¶é—´: " << elapsed.count() << " ms" << std::endl;
 
         } while (true);
 
