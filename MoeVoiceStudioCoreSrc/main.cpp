@@ -1,20 +1,23 @@
 #include <iostream>
-
+#include "header/ModelBase.hpp"
 #include "header/VitsSvc.hpp"
+#include <chrono>
 
 int main() {
     rapidjson::Document Config;
     Config.Parse(R"({
-        "Folder" : "ShirohaRVC",
-        "Name" : "Shiroha-RVC",
-        "Type" : "RVC",
-        "Symbol" : "",
-        "Cleaner" : "",
-        "Rate" : 40000,
-        "Hop" : 320,
-        "Hifigan" : "",
-        "Hubert" : "hubert4.0",
-        "Characters" : ["Shiroha"]
+    "Folder" : "march7",
+    "Name" : "march7",
+    "Type" : "RVC",
+    "Rate" : 48000,
+    "Hop" : 320,
+    "Cleaner" : "",
+    "Hubert": "hubert4.0",
+    "Diffusion": false,
+    "CharaMix": false,
+    "Volume": false,
+    "HiddenSize": 256,
+    "Characters" : ["march7"]
 	})");
 
     //Progress bar
@@ -25,7 +28,7 @@ int main() {
     {
         auto params = InferClass::InferConfigs();
         params.kmeans_rate = 0.5;
-        params.keys = 0;
+        params.keys = 8;
         return params;
     };
 
@@ -40,12 +43,36 @@ int main() {
             new InferClass::VitsSvc(Config, ProgressCallback, ParamsCallback)
             );
 
-        output = model->Inference(inp);
+        do
+        {
+            std::wstring input;
+
+            std::wcout << "输入源音频路径：" << std::endl;
+            std::wcin >> input;
+            // 在这里可以根据输入指令进行相应的处理
+            std::wcout << "输入指令为：" << input << std::endl;
 
 
-        std::wstring outpath = GetCurrentFolder() + L"\\test.wav";
-        const Wav outWav(model->GetSamplingRate(), output.size() * 2, output.data());
-        outWav.Writef(outpath);
+            // 记录开始时间
+            auto start = std::chrono::high_resolution_clock::now();
+            output = model->Inference(input);
+
+
+            std::wstring outpath = GetCurrentFolder() + L"\\test.wav";
+            std::cout << outpath.c_str();
+            const Wav outWav(model->GetSamplingRate(), output.size() * 2, output.data());
+            outWav.Writef(outpath);
+
+            // 记录结束时间
+            auto end = std::chrono::high_resolution_clock::now();
+
+            // 计算执行时间
+            std::chrono::duration<double, std::milli> elapsed = end - start;
+
+            // 输出执行时间
+            std::cout << "代码执行时间: " << elapsed.count() << " ms" << std::endl;
+
+        } while (true);
 
         delete model;
     }

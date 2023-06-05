@@ -89,36 +89,48 @@ VitsSvc::VitsSvc(const rapidjson::Document& _config, const callback& _cb, const 
 	else
 		logger.log(L"[Info] Disable Plugin");
 
-	if (!_config["SoVits3"].IsNull())
-		SV3 = _config["SoVits3"].GetBool();
-	if (!_config["SoVits4"].IsNull())
-		SV4 = _config["SoVits4"].GetBool();
+	if (_config.HasMember("SoVits3")) {
+		if (!_config["SoVits3"].IsNull())
+			SV3 = _config["SoVits3"].GetBool();
+	}
+	if (_config.HasMember("SoVits4")) {
+		if (!_config["SoVits4"].IsNull())
+			SV4 = _config["SoVits4"].GetBool();
+	}
 
 	if (SV3 && SV4)
 		throw std::exception("[Error] SoVits3 && SoVits4 Must Be False");
 
-	if(!(_config["Hop"].IsInt() || _config["Hop"].IsInt64()))
-		throw std::exception("[Error] Hop Must Exist And Must Be Int");
-	hop = _config["Hop"].GetInt();
+	if (_config.HasMember("Hop")) {
+		if (!(_config["Hop"].IsInt() || _config["Hop"].IsInt64()))
+			throw std::exception("[Error] Hop Must Exist And Must Be Int");
+		hop = _config["Hop"].GetInt();
+	}
 
-	if (!(_config["HiddenSize"].IsInt() || _config["HiddenSize"].IsInt64()))
-		logger.log(L"[Warn] Missing Field \"HiddenSize\", Use Default Value (256)");
-	else
-		Hidden_Size = _config["HiddenSize"].GetInt();
+	if (_config.HasMember("HiddenSize")) {
+		if (!(_config["HiddenSize"].IsInt() || _config["HiddenSize"].IsInt64()))
+			logger.log(L"[Warn] Missing Field \"HiddenSize\", Use Default Value (256)");
+		else
+			Hidden_Size = _config["HiddenSize"].GetInt();
+	}
 
-	if (!_config["CharaMix"].IsBool())
-		logger.log(L"[Warn] Missing Field \"CharaMix\", Use Default Value (False)");
-	else
-		CharaMix = _config["CharaMix"].GetBool();
+	if (_config.HasMember("CharaMix")) {
+		if (!_config["CharaMix"].IsBool())
+			logger.log(L"[Warn] Missing Field \"CharaMix\", Use Default Value (False)");
+		else
+			CharaMix = _config["CharaMix"].GetBool();
+	}
 
 	if(_waccess(K_means_folder.c_str(), 0) != -1)
 	{
 		KMenas_Stat = true;
-		if (!(_config["KMeansLength"].IsInt() || _config["KMeansLength"].IsInt64()))
-			logger.log(L"[Warn] Missing Field \"KMeansLength\", Use Default Value (10000)");
-		else
-			KMeans_Size = _config["KMeansLength"].GetInt();
-		kmeans_ = new Kmeans(K_means_folder, Hidden_Size, KMeans_Size);
+		if (_config.HasMember("KMeansLength")) {
+			if (!(_config["KMeansLength"].IsInt() || _config["KMeansLength"].IsInt64()))
+				logger.log(L"[Warn] Missing Field \"KMeansLength\", Use Default Value (10000)");
+			else
+				KMeans_Size = _config["KMeansLength"].GetInt();
+			kmeans_ = new Kmeans(K_means_folder, Hidden_Size, KMeans_Size);
+		}
 	}
 
 	if(hop < 1)
@@ -131,10 +143,12 @@ VitsSvc::VitsSvc(const rapidjson::Document& _config, const callback& _cb, const 
 		SVV2 = inpname != "uv";
 	}
 
-	if (_config["Volume"].IsBool())
-		VolumeB = _config["Volume"].GetBool();
-	else
-		logger.log(L"[Warn] Missing Field \"Volume\", Use Default Value (False)");
+	if (_config.HasMember("Volume")) {
+		if (_config["Volume"].IsBool())
+			VolumeB = _config["Volume"].GetBool();
+		else
+			logger.log(L"[Warn] Missing Field \"Volume\", Use Default Value (False)");
+	}
 
 	if (_config["Characters"].IsArray())
 		n_speaker = _config["Characters"].Size();
