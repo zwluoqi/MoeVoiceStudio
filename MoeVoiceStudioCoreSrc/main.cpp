@@ -3,22 +3,51 @@
 #include "header/VitsSvc.hpp"
 #include <chrono>
 
-int main() {
-    rapidjson::Document Config;
-    Config.Parse(R"({
-    "Folder" : "march7",
-    "Name" : "march7",
-    "Type" : "RVC",
-    "Rate" : 48000,
-    "Hop" : 320,
-    "Cleaner" : "",
-    "Hubert": "hubert4.0",
-    "Diffusion": false,
-    "CharaMix": false,
-    "Volume": false,
-    "HiddenSize": 256,
-    "Characters" : ["march7"]
-	})");
+rapidjson::Document parseJSONFile(const std::string& filename) {
+    rapidjson::Document document;
+
+    // 打开JSON文件
+    std::ifstream file(filename);
+
+    if (file.is_open()) {
+        // 将文件内容读入字符串
+        std::string jsonContent((std::istreambuf_iterator<char>(file)),
+            std::istreambuf_iterator<char>());
+
+        // 解析JSON字符串
+        document.Parse(jsonContent.c_str());
+
+        // 检查解析是否成功
+        if (document.HasParseError()) {
+            std::cout << "Failed to parse JSON." << std::endl;
+        }
+
+        // 关闭文件
+        file.close();
+    }
+    else {
+        //std::cout << "Failed to open JSON file." << std::endl;
+        throw std::exception("Failed to open JSON file.\n");
+    }
+
+    return document;
+}
+
+InferClass::BaseModelType* CreateModel() {
+    std::string modelPath;
+    std::cout << "输入ONNX模型路径：" << std::endl;
+    std::cin >> modelPath;
+
+    std::string configPath;
+    std::cout << "输入配置路径：" << std::endl;
+    std::cin >> configPath;
+
+    rapidjson::Document Config = parseJSONFile(configPath);
+    // 添加字符串字段到Document对象
+    rapidjson::Document::AllocatorType& allocator = Config.GetAllocator();
+    rapidjson::Value key("ModelPath", allocator);
+    rapidjson::Value value(modelPath.c_str(), allocator);
+    Config.AddMember(key, value, allocator);
 
     //Progress bar
     const InferClass::BaseModelType::callback ProgressCallback = [](size_t a, size_t b) {std::cout << std::to_string((float)a * 100.f / (float)b) << "%\n"; };
@@ -32,17 +61,56 @@ int main() {
         return params;
     };
 
+    const auto model = dynamic_cast<InferClass::BaseModelType*>(
+        new InferClass::VitsSvc(Config, ProgressCallback, ParamsCallback)
+        );
+    return model;
+}
+
+InferClass::BaseModelType* TryCreateModel() {
+
+    try
+    {
+        return CreateModel();
+    }
+    catch (std::exception& e)
+    {
+        std::cout << e.what();
+        return TryCreateModel();
+    }
+
+}
+
+int main() {
+    //rapidjson::Document Config;
+ //   Config.Parse(R"({
+ //   "Folder" : "march7",
+ //   "Name" : "march7",
+ //   "Type" : "RVC",
+ //   "Rate" : 48000,
+ //   "Hop" : 320,
+ //   "Cleaner" : "",
+ //   "Hubert": "hubert4.0",
+ //   "Diffusion": false,
+ //   "CharaMix": false,
+ //   "Volume": false,
+ //   "HiddenSize": 256,
+ //   "Characters" : ["march7"]
+	//})");
+
+    
+
+    const auto model = TryCreateModel();
+
+
     //modify duration per phoneme
     InferClass::TTS::DurationCallback DurationCallback = [](std::vector<float>&) {};
+
 
     std::vector<int16_t> output;
     try
     {
-        std::wstring inp;
-        const auto model = dynamic_cast<InferClass::BaseModelType*>(
-            new InferClass::VitsSvc(Config, ProgressCallback, ParamsCallback)
-            );
-
+        //std::wstring inp;
         do
         {
             std::wstring input;
@@ -50,7 +118,7 @@ int main() {
             std::wcout << "输入源音频路径：" << std::endl;
             std::wcin >> input;
             // 在这里可以根据输入指令进行相应的处理
-            std::wcout << "输入指令为：" << input << std::endl;
+            //std::wcout << "输入指令为：" << input << std::endl;
 
 
             // 记录开始时间
@@ -74,10 +142,11 @@ int main() {
 
         } while (true);
 
-        delete model;
     }
     catch (std::exception& e)
     {
         std::cout << e.what();
     }
+
+    delete model;
 }

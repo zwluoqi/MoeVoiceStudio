@@ -1,6 +1,7 @@
 #include "../header/VitsSvc.hpp"
 #include "../../AvCodec/AvCodeResample.h"
 #include <random>
+#include <filesystem>
 
 INFERCLASSHEADER
 VitsSvc::~VitsSvc()
@@ -25,15 +26,33 @@ VitsSvc::VitsSvc(const rapidjson::Document& _config, const callback& _cb, const 
 	ChangeDevice(_dev);
 
 	//Check Folder
-	if (_config["Folder"].IsNull())
-		throw std::exception("[Error] Missing field \"folder\" (Model Folder)");
-	if (!_config["Folder"].IsString())
-		throw std::exception("[Error] Field \"folder\" (Model Folder) Must Be String");
-	const auto _folder = to_wide_string(_config["Folder"].GetString());
-	const auto K_means_folder = GetCurrentFolder() + L"\\Models\\" + _folder + L"\\" + L"kmeans.npy";
-	if (_folder.empty())
-		throw std::exception("[Error] Field \"folder\" (Model Folder) Can Not Be Empty");
-	const std::wstring _path = GetCurrentFolder() + L"\\Models\\" + _folder + L"\\" + _folder;
+	std::wstring _path;
+	std::wstring K_means_folder;
+	if (_config.HasMember("ModelPath")) {
+		const auto modelPath = _config["ModelPath"].GetString();
+		_path = to_wide_string(modelPath);
+
+		// 将字符串路径转换为filesystem::path对象
+		std::filesystem::path pathObj(modelPath);
+		// 获取文件所在目录
+		std::filesystem::path directory = pathObj.parent_path();
+
+		K_means_folder = to_wide_string( directory.string() ) + L"\\"+L"kmeans.npy";
+	}
+	else {
+		if (_config["Folder"].IsNull())
+			throw std::exception("[Error] Missing field \"folder\" (Model Folder)");
+		if (!_config["Folder"].IsString())
+			throw std::exception("[Error] Field \"folder\" (Model Folder) Must Be String");
+		const auto _folder = to_wide_string(_config["Folder"].GetString());
+		K_means_folder = GetCurrentFolder() + L"\\Models\\" + _folder + L"\\" + L"kmeans.npy";
+		if (_folder.empty())
+			throw std::exception("[Error] Field \"folder\" (Model Folder) Can Not Be Empty");
+		if (_modelType == modelType::RVC)
+			_path = GetCurrentFolder() + L"\\Models\\" + _folder + L"\\" + _folder + L"_RVC.onnx";
+		else
+			_path = GetCurrentFolder() + L"\\Models\\" + _folder + L"\\" + _folder + L"_RVC.onnx";
+	}
 
 	if (_config["Hubert"].IsNull())
 		throw std::exception("[Error] Missing field \"Hubert\" (Hubert Folder)");
@@ -48,10 +67,11 @@ VitsSvc::VitsSvc(const rapidjson::Document& _config, const callback& _cb, const 
 	{
 		logger.log(L"[Info] loading VitsSvcModel Models");
 		hubert = new Ort::Session(*env, (GetCurrentFolder() + L"\\hubert\\" + HuPath + L".onnx").c_str(), *session_options);
-		if (_modelType == modelType::RVC)
+		/*if (_modelType == modelType::RVC)
 			VitsSvcModel = new Ort::Session(*env, (_path + L"_RVC.onnx").c_str(), *session_options);
 		else
-			VitsSvcModel = new Ort::Session(*env, (_path + L"_SoVits.onnx").c_str(), *session_options);
+			VitsSvcModel = new Ort::Session(*env, (_path + L"_SoVits.onnx").c_str(), *session_options);*/
+		VitsSvcModel = new Ort::Session(*env, _path.c_str(), *session_options);
 		logger.log(L"[Info] VitsSvcModel Models loaded");
 	}
 	catch (Ort::Exception& _exception)
